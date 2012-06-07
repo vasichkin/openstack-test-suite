@@ -1,0 +1,9 @@
+Feature: Create user and project using python-novaclient CLI
+    In order to prepare environment for smoke test
+    As cloud admin
+    I want to perform network setup
+
+    Scenario: Create network
+#        Given nova project "{{project.name}}" exists
+        When I create nova network "{{net.cloud.cidr}}" labeled "smoketest_net", bridge_interface "{{net.external_interface}}", vlan id "100"
+        Then nova network "{{net.cloud.cidr}}" exists

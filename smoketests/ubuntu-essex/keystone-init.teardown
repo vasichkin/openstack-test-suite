@@ -1,0 +1,56 @@
+Feature: DeInitialize keystone
+    as cloud admin
+    I want to delete users and roles 
+
+
+    Scenario: Create service novarc for initial keystone setup
+        Given novarc is available
+
+    Scenario: remove service users and roles
+#        Given every service is running:
+#            | keystone |
+
+        I delete role "Member"
+        I delete role "KeystoneAdmin"
+        I delete role "KeystoneServiceAdmin"
+        I delete role "sysadmin"
+        I delete role "netadmin"
+        I delete role "ResellerAdmin"
+
+        I delete service named "keystone"
+        I delete user "glance"
+        I delete service named "glance"
+
+        I delete user "swift"
+        I delete service named "swift"
+
+        I delete user "quantum"
+        I delete service named "qantum"
+
+        I delete service named "volume"
+        I delete service named "horizon"
+
+        I delete user "nova"
+        I delete service named "nova"
+
+        I delete tenant "{{keystone.service_tenant}}"
+        I delete user "{{keystone.admin}}"
+
+
+    Scenario: Forget service novarc
+        Given novarc is available
+        When I forget novarc
+        Then novarc is not available
+
+    Scenario: Generate service novarc
+        When I generate novarc file using parameters:
+            |  Parameter          |              Value                  |
+            |  SERVICE_ENDPOINT   |  "{{keystone.service_endpoint}}"    |
+            |  SERVICE_TOKEN      |  "{{keystone.service_token}}"       |
+
+        Then novarc is available
+
+    Scenario: Remove users
+        I delete role "admin"
+        I delete tenant "{{project.name}}"
+        I delete user "{{user.name}}"

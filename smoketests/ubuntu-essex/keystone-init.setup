@@ -1,0 +1,153 @@
+Feature: Initialize keystone
+    as cloud admin
+    I want to create service users and roles
+    I want to create cloud admin user
+
+    Scenario: Create service novarc for initial keystone setup
+#        Given every service is running:
+#            | ServiceName   |
+#            {% for service in openstack_services %}
+#            | {{ service }} |
+#            {% endfor %}
+
+        When I generate novarc file using parameters:
+            |  Parameter          |              Value                  |
+            |  SERVICE_ENDPOINT   |  "{{keystone.service_endpoint}}"    |
+            |  SERVICE_TOKEN      |  "{{keystone.service_token}}"       |
+
+        Then novarc is available
+        And novarc for project "{{project.name}}", user "{{user.name}}" is available
+        And novarc for project "{{project.name}}", user "{{user.name}}", password "{{keystone.admin_password}}", region "{{keystone.region}}" is available
+
+
+    Scenario: Configure Keystone (write our creds to config files)
+        Given novarc is available
+#        Given every RPM package is installed:
+#            | PackageName        |
+#            | openstack-keystone |
+
+        And I run commands:
+            |  Command                                                         | Expected  |
+            |  sudo sed -i 's/^admin_token =.*/admin_token = {{keystone.service_token}}/' "{{keystone.conf}}"  |  noFail  |
+            |  sudo sed -i 's/^admin_user =.*/admin_user = nova/' "{{nova.api_conf}}"  |  noFail  |
+            |  sudo sed -i 's/^admin_password =.*/admin_password = {{keystone.service_password}}/' "{{nova.api_conf}}" |  noFail  |
+            |  sudo sed -i 's/^admin_tenant_name =.*/admin_tenant_name = {{keystone.service_tenant}}/' "{{nova.api_conf}}" |  noFail  |
+
+            |  sudo sed -i 's/^admin_user =.*/admin_user = glance/' "{{glance.api_paste}}"  |  noFail  |
+            |  sudo sed -i 's/^admin_password =.*/admin_password = {{keystone.service_password}}/' "{{glance.api_paste}}" |  noFail  |
+            |  sudo sed -i 's/^admin_tenant_name =.*/admin_tenant_name = {{keystone.service_tenant}}/' "{{glance.api_paste}}" |  noFail  |
+
+            |  sudo sed -i 's/^admin_user =.*/admin_user = glance/' "{{glance.registry_paste}}"  |  noFail  |
+            |  sudo sed -i 's/^admin_password =.*/admin_password = {{keystone.service_password}}/' "{{glance.registry_paste}}" |  noFail  |
+            |  sudo sed -i 's/^admin_tenant_name =.*/admin_tenant_name = {{keystone.service_tenant}}/' "{{glance.registry_paste}}" |  noFail  |
+
+
+    Scenario: Configure Nova 
+        Given novarc is available
+        When I change flag file "{{nova.conf_file}}" by setting flag values:
+            | Name                      | Value                                         |
+            | --verbose                 | true                                          |
+            | --debug                   | true                                          |
+            | --auth_strategy           | keystone                                      |
+
+# Tune nova.conf, to allow instance start on low memory computer
+            | --ram_allocation_ratio    | 3                                             |
+            | --scheduler_default_filters | AllHostsFilter                              |
+
+
+         Then the following flags in file "{{nova.conf_file}}" are set to:
+            | Name                      | Value                                         |
+            | --verbose                 | true                                          |
+            | --debug                   | true                                          |
+            | --auth_strategy           | keystone                                      |
+
+
+    Scenario: Restart services to apply changes
+        I restart services:
+            | ServiceName        |
+            | keystone           |
+            | nova-api           |
+            | glance-registry    |
+            | glance-api         |
+        I run keystone-manage db_sync
+
+
+    Scenario: Initial keystone configuration using service auth
+        Given every service is running:
+            | keystone |
+        I create tenant "{{keystone.service_tenant}}"
+        I create user "{{keystone.admin}}", password "{{keystone.admin_password}}"
+
+        I create role "admin"
+        I create role "Member"
+        I create role "KeystoneAdmin"
+        I create role "KeystoneServiceAdmin"
+        I create role "sysadmin"
+        I create role "netadmin"
+
+        I add role "admin" for user "{{keystone.admin}}" in tenant "{{keystone.service_tenant}}"
+        I add role "KeystoneAdmin" for user "{{keystone.admin}}" in tenant "{{keystone.service_tenant}}"
+        I add role "KeystoneServiceAdmin" for user "{{keystone.admin}}" in tenant "{{keystone.service_tenant}}"
+
+
+        I create service named "keystone", type "identity", description "OSCT: Keystone Identity Service"
+
+        I create user "nova", password "{{keystone.service_password}}", tenant "{{keystone.service_tenant}}"
+        I create service named "nova", type "compute", description "OSCT: Nova Compute Service"
+        I add role "admin" for user "nova" in tenant "{{keystone.service_tenant}}"
+
+        I create user "glance", password "{{keystone.service_password}}", tenant "{{keystone.service_tenant}}"
+        I create service named "glance", type "image", description "OSCT: Glance Image Service"
+        I add role "admin" for user "glance" in tenant "{{keystone.service_tenant}}"
+
+        I create role "ResellerAdmin"
+        I add role "ResellerAdmin" for user "nova" in tenant "{{keystone.service_tenant}}"
+        I create user "swift", password "{{keystone.service_password}}", tenant "{{keystone.service_tenant}}"
+        I create service named "swift", type "object-store", description "OSCT: Swift Service"
+        I add role "admin" for user "swift" in tenant "{{keystone.service_tenant}}"
+
+        I create user "quantum", password "{{keystone.service_password}}", tenant "{{keystone.service_tenant}}"
+        I create service named "qantum", type "network", description "OSCT: Quantum Service"
+        I add role "admin" for user "quantum" in tenant "{{keystone.service_tenant}}"
+
+
+        I create service named "volume", type "volume", description "OSCT: Nova Volume Service"
+        I create service named "horizon", type "dashboard", description "OSCT: Openstack Dashboard"
+
+
+    Scenario: Create admin user
+        I create tenant "{{project.name}}"
+        I create user "{{user.name}}", password "{{user.password}}", tenant "{{project.name}}"
+        I add role "admin" for user "{{user.name}}" in tenant "{{project.name}}"
+
+    Scenario: Forget service novarc
+        Given novarc is available
+        When I forget novarc
+        Then novarc is not available
+
+    Scenario: Create novarc for user {{user.name}}
+        When I generate novarc file using parameters:
+            |  Parameter       |              Value                        |
+            |  OS_USERNAME     |  "{{user.name}}"                          |
+            |  OS_PASSWORD     |  "{{user.password}}"                      |
+            |  OS_TENANT_NAME  |  "{{project.name}}"                       |
+            |  OS_AUTH_URL     |  "http://{{service.keystone}}:5000/v2.0"  |
+            |  COMPUTE_API_VERSION  |  "1.1"                               |
+            |  NOVA_VERSION    |  "1.1"                                    |
+            |  OS_AUTH_STRATEGY  |  "keystone"                                    |
+
+        Then novarc is available
+        And novarc for project "{{project.name}}", user "{{user.name}}" is available
+        And novarc for project "{{project.name}}", user "{{user.name}}", password "{{keystone.admin_password}}", region "{{keystone.region}}" is available
+
+    Scenario: Generate EC2 credentials
+        I get EC2 credentials
+        I generate novarc file using parameters:
+            |  Parameter       |              Value                        |
+            |  EC2_URL            |  "http://{{service.nova}}:8773/services/Cloud" |
+            |  S3_URL             |  "http://{{service.swift}}:3333"    |
+#            |  EC2_ACCESS_KEY     |  "{{user.name}}:{{project.name}}"   |-  Should be added auto
+#            |  EC2_SECRET_KEY     |  "{{user.password}}"                |
+            |  EC2_USER_ID        |  "42"                               |  # secret key to make euca working
+            |  EC2_PRIVATE_KEY    |  "ResultDir/pk.pem"                 |
+            |  EC2_CERT           |  "ResultDir/cert.pem"               |

@@ -1,0 +1,24 @@
+Feature: Remove pool of external IP's
+    In order to clean after test of floating IP feature
+    As tester
+    I want to remove pool of external IP's using nova-manage
+
+
+    Scenario: Deregister pool of external IPs
+        Given novarc for project "{{project.name}}", user "{{user.name}}" is available
+        And I see pool of external IP addresses "{{net.floating_ip_net}}" exist
+        When I remove pool of external IP addresses "{{net.floating_ip_net}}"
+        Then I see pool of external IP addresses "{{net.floating_ip_net}}" does not exist
+
+
+    Scenario: Deregister pool of single FlIPs
+        Given novarc for project "{{project.name}}", user "{{user.name}}" is available
+#        And I see pool of external IP addresses "{{single_floating.cidr}}" exist
+        And I see pool of external IP addresses "{{single_floating.ip}}" exist
+#        When I remove pool of external IP addresses "{{single_floating.cidr}}"
+        And I remove pool of external IP addresses "{{single_floating.ip}}"
+#        Then I see pool of external IP addresses "{{single_floating.cidr}}" does not exist
+        And I see pool of external IP addresses "{{single_floating.ip}}" does not exist
+
+# BUG HERE, i can add same floatings more than ones. There is no checking. So, here will be fail if privious run fails
+# https://bugs.launchpad.net/bugs/1006873

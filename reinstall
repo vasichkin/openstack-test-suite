@@ -1,0 +1,36 @@
+#!/bin/bash
+
+#quik and dyrty script to reinstall openstack on ubuntu. It's just for testing purpose
+
+
+aptitude -y purge nova-common keystone rabbitmq-server libvirt-bin
+killall dnsmasq
+
+vgremove nova-volumes
+pvremove /dev/loop4
+sleep 10
+losetup -d /dev/loop4
+
+rm -rf /var/lib/nova
+rm -rf /var/lib/libvirtd
+rm -rf /var/lib/keystone
+
+rm -rf /var/log/nova
+rm -rf /var/log/libvirtd
+rm -rf /var/log/keystone
+rm -rf /etc/libvirt
+
+aptitude update
+
+aptitude -y install nova-common nova-cert nova-api nova-scheduler nova-compute nova-network nova-volume keystone rabbitmq-server
+cp -rf /_DATA/etc.works/nova/ /etc/
+cp -rf /_DATA/etc.works/keystone/ /etc/
+
+service nova-api restart
+service nova-compute restart
+service nova-scheduler restart
+service nova-volume restart
+service nova-cert restart
+
+##nova-manage network create --label mynet1 --bridge_interface=eth0 --vlan=111 --fixed_range_v4 10.10.100.0/24
+nova-manage flavor create --name='m1.test' --flavor=6 --memory=512 --root_gb=2 --cpu=1 --ephemeral_gb=2
