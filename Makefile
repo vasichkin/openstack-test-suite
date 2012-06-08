@@ -5,8 +5,8 @@ help:
 
 install: clean
 	install -m 0755 -d ${DESTDIR}/usr/local/share/openstack-core-test
-	install -m 0755	-d  ${DESTDIR}/usr/local/share/openstack-core-test/smoketests/ubuntu-essex
-	install -m 0755 -t  ${DESTDIR}/usr/local/share/openstack-core-test/smoketests/ubuntu-essex smoketests/ubuntu-essex/*
+	install -m 0755	-d  ${DESTDIR}/usr/local/share/openstack-core-test/integration-tests/ubuntu-essex
+	install -m 0755 -t  ${DESTDIR}/usr/local/share/openstack-core-test/integration-tests/ubuntu-essex integration-tests/ubuntu-essex/*
 
 clean:
 	 @printf "Cleaning up files that are already in .gitignore... "

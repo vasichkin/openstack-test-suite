@@ -1391,9 +1391,12 @@ class nova_cli(object):
         status={}
         values=out.split("|")
         if values:
-            for key in ('ID', 'Status', 'Display Name', 'Size', 'Volume Type', 'Attached to'):
-                status[key.lower()]=values[k].strip()
-                k=k+1
+            try:
+                for key in ('ID', 'Status', 'Display Name', 'Size', 'Volume Type', 'Attached to'):
+                    status[key.lower()]=values[k].strip()
+                    k=k+1
+            except:
+                return False
         if status: return status
         else: return False
 
@@ -1580,7 +1583,6 @@ class euca_cli(object):
     def volume_detach(volume_name):
         volume_id='vol-'+misc.get_euca_id(nova_id=world.volumes[volume_name])
         out = novarc.bash('euca-detach-volume %s' % volume_id)
-        time.sleep(30)
         return out.successful()
 
     @staticmethod
@@ -1612,7 +1614,7 @@ class euca_cli(object):
 
     @staticmethod
     def sgroup_add(group_name):
-        return novarc.bash('euca-add-group -d smoketest-secgroup-test %s' % group_name).successful()
+        return novarc.bash('euca-add-group -d integration-tests-secgroup-test %s' % group_name).successful()
 
     @staticmethod
     def sgroup_delete(group_name):
@@ -1994,6 +1996,7 @@ class misc(object):
         out = bash("sudo -l")
         return out.successful() and out.output_nonempty() \
             and (out.output_contains_pattern("\(ALL\)(\s)*NOPASSWD:(\s)*ALL")
+                or out.output_contains_pattern("\(ALL : ALL\)(\s)*NOPASSWD:(\s)*ALL")
                 or out.output_contains_pattern("User root may run the following commands on this host"))
 
     @staticmethod

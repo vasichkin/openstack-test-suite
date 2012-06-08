@@ -58,19 +58,11 @@ glance:
   api_paste: /etc/glance/glance-registry-paste.ini
   registry_paste: /etc/glance/glance-api-paste.ini
 
-image2:
-  path: images/mini_image.tar.gz
-#  url: http://osc-build.vm.griddynamics.net/images/rhel_image.tar.gz
-  url: http://127.0.0.1/images/rhel_image.tar.gz
-  disk: rootfs.raw
-  ram: initramfs-2.6.32-131.0.15.el6.x86_64.img
-  kernel: vmlinuz-2.6.32-131.0.15.el6.x86_64
-  name: rhel_image
 
 image:
-  path: images/ttylinux.tar.gz
-  url: http://127.0.0.1/images/mini_image.img
-  disk: mini_image.img
+#  path: images/ttylinux.tar.gz
+#  url: http://127.0.0.1/images/mini_image.img
+#  disk: mini_image.img
   name: solid_mini_image
 
 single_floating:
@@ -126,9 +118,48 @@ vm3:
     private: id_rsa_generated
     public:  id_rsa_generated.pub
 
+
+## -----------------------------   VOLUME
+volume:
+  source_dev:  '/dev/loop4'
+  source_dev_file: '/tmp/loop4'
+  source_dev_size: 8
+  group: &lvm_group nova-volumes
+  name:   osct-vol-test0
+  dev:   '/dev/vdc'
+  size: 1
+  size_bytes: 1073741824
+  zone: nova
+  timeout: 60
+  attach_deadline: 60
+  dir: '/tmp/nova-volume-test'
+
+volume1:
+  name:   osct-vol-test1
+  dev:   '/dev/vdd'
+  size: 1
+  zone: nova
+  timeout: 60
+  attach_deadline: 60
+
+
+volume_packages:
+ - scsi-target-utils
+ - lvm2
+
+volume_services:
+ - tgtd
+ - nova-volume
+
+security_group:
+  name: integration-tests-sg
+
+floating:
+  name: floatip
+
+
 openstack_services:
  - nova-api
-# - nova-direct-api
  - nova-compute
  - nova-network
  - nova-scheduler
@@ -232,74 +263,3 @@ state_files:
  - '/tmp/.guestfs*'
  - '/tmp/tmp*'
 
-## -----------------------------   VOLUME
-volume:
-  source_dev:  '/dev/loop4'
-  source_dev_file: '/tmp/loop4'
-  source_dev_size: 8
-  group: &lvm_group nova-volumes
-  name:   osct-vol-test
-  dev:   '/dev/vdc'
-  size: 1
-  size_bytes: 1073741824
-  zone: nova
-  timeout: 60
-  attach_deadline: 60
-  dir: '/tmp/nova-volume-test'
-
-volume1:
-  name:   osct-vol-test1
-  dev:   '/dev/vdd'
-  size: 1
-  zone: nova
-  timeout: 60
-  attach_deadline: 60
-
-
-volume_packages:
- - scsi-target-utils
- - lvm2
-
-volume_services:
- - tgtd
- - nova-volume
-
-security_group:
-  name: smoketest-sg
-
-floating:
-  name: floatip
-
-
-
-# ----------------------------  LOCAL VOLUMES
-local_volume:
-  size: 100M
-  size_bytes: 104857600
-  new_size: 130023424
-  device: /dev/vdc
-  timeout: 640
-  resize_timeout: 320
-  delete_timeout: 320
-  group: *lvm_group
-  snapshot:
-    name: test_volume_snapshot
-    timeout: 320
-    device: /dev/vdd
-    resize: 130023424
-    resize_device: /dev/vde
-  big_size: 10000G
-
-disk_types:
- - lvm
- - raw
- - qcow
-
-
-tools:
- - glance
-# - nova2ools  -  bug with image upload
- - nova2ools
- - nova-manage
-# - nova  - to be done
-# - euca2ools  - it's not working for now. cannot check test

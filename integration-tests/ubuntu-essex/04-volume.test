@@ -125,9 +125,12 @@ Feature: Test nova volume
         Given I see volume "{{volume.name}}" attached to VM instance "{{vm2.name}}"
         And I see volume "{{volume1.name}}" attached to VM instance "{{vm2.name}}"
         When I detach volume "{{volume.name}}" attached to VM instance "{{vm2.name}}"
+# https://bugs.launchpad.net/nova/+bug/1009530
+# BUG HERE. Could be "database is locked" error in nova-volumes.
+        sleep "90"
         And I detach volume "{{volume1.name}}" attached to VM instance "{{vm2.name}}"
         Then I wait volume "{{volume.name}}" state "available" for "{{vm.boot_timeout}}" seconds
-        Then I wait volume "{{volume.name}}" state "available" for "{{vm.boot_timeout}}" seconds
+        Then I wait volume "{{volume1.name}}" state "available" for "{{vm.boot_timeout}}" seconds
         Then I see volume "{{volume.name}}" available
         Then I see volume "{{volume1.name}}" available
 
@@ -135,12 +138,10 @@ Feature: Test nova volume
         Given I see volume "{{volume.name}}" available
         And I see volume "{{volume1.name}}" available
         When I remove volume "{{volume.name}}"
+# BUGE here. Same as above
+        sleep "90"
         And I remove volume "{{volume1.name}}"
-# https://bugs.launchpad.net/nova/+bug/1009530
-# BUG HERE. Could be "database is locked" error in nova-volumes.
-        sleep "30"
         Then I see volume "{{volume.name}}" removed
-        sleep "30"
         And I see volume "{{volume1.name}}" removed
 
 

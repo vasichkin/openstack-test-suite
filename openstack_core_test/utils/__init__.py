@@ -52,9 +52,9 @@ class step_assert(object):
 ##  ----------------------------------------------------------
 ##
 
-@step(u'sleep')
-def sleep(step):
-    time.sleep(400)
+@step(u'sleep "(.*?)"')
+def sleep_(step, time):
+    sleep(int(time))
 
 @step(u'current user can execute sudo without password')
 def check_current_user_sudo_nopwd(step):
