@@ -18,10 +18,10 @@ What this suite does
 In a scenario scripts directory (integration-tests/ubuntu-essex/) you can see what steps are perfomed. It's human readble text.
 
 In a short, basic test does (01-keystone-instance.test):
-* Makes changes to configuration files to perform initial keystone configuration;
-* Creates project, user, network, user keys, checking tha all goes fine;
-* Spawns instance and check it is accessible from outside;
-* Stops instance, removes project, user, network, user keys checking every step does what it should.
+ * Makes changes to configuration files to perform initial keystone configuration;
+ * Creates project, user, network, user keys, checking tha all goes fine;
+ * Spawns instance and check it is accessible from outside;
+ * Stops instance, removes project, user, network, user keys checking every step does what it should.
 
 There are also tests to check security groups, floating ip, volumes functionality.
 All scripts using BDD style, so it's human-readble text.
